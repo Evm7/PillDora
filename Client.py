@@ -12,7 +12,7 @@ logger = logging.getLogger('AideBot')
 
 TOKEN_AIDEBOT = '902984072:AAFd0KLLAinZIrGhQvVePQwBt3WJ1QQQDGs'
 TOKEN_PROVE = '877926240:AAEuBzlNaqYM_kXbOMxs9lzhFsR7UpoqKWQ'
-LOGIN, NEW_USER, CHOOSING, INTR_MEDICINE, CHECK, CALENDAR_CHOOSE, CALENDAR_TASKS = range(7)
+LOGIN, NEW_USER, CHOOSING, INTR_MEDICINE, CHECK_MED, CHECK_REM , CALENDAR_CHOOSE, CALENDAR_TASKS, GET_CN = range(9)
 
 reply_keyboard = [['Introduce Medicine', 'Calendar'],
                   ['History', 'Delete reminder'],
@@ -95,8 +95,6 @@ def new_user(update, context):
 def choose_function(update, context):
     logger.info('User in the menu')
     update.message.reply_text("Is there any other way I can help you?", reply_markup=markup)
-    return CHOOSING
-
 
 def start(update, context):
     logger.info('User has connected to AideBot: /start')
@@ -129,14 +127,13 @@ def send_new_medicine(update, context):
         'Medicine correctly introduced!\n\tCN : ' + medicine[0] + '\n\tQuantity : ' + medicine[1] + '\n\tFrequency : ' +
         medicine[2] + '\n\tEndDate : ' + medicine[3] + '\n\tExpiration Date : ' + medicine[4])
     update.message.reply_text('Is the medicine correctly introduced? ', reply_markup=yes_no_markup)
-    return CHECK
+    return CHECK_MED
 
 
 def see_calendar(update, context):
     logger.info('User seeing calendar')
     update.message.reply_text("Please select a date: ",
                               reply_markup=telegramcalendar.create_calendar())
-    return CALENDAR_CHOOSE
 
 def inline_handler(update, context):
     selected, date = telegramcalendar.process_calendar_selection(context.bot, update)
@@ -144,28 +141,35 @@ def inline_handler(update, context):
         context.bot.send_message(chat_id=update.callback_query.from_user.id,
                          text="You selected %s" % (date.strftime("%d/%m/%Y")),
                          reply_markup=ReplyKeyboardRemove())
-        get_calendar_tasks(date.strftime("%d/%m/%Y"), update, context)
+        get_calendar_tasks(update, context, date.strftime("%d/%m/%Y"))
     return CHOOSING
 
-def get_calendar_tasks(date, update, context):
-    logger.info('Tasks for the '+ date)
 
+def get_calendar_tasks(update, context, date):
+    logger.info('Tasks for the user on the date '+ date)
+    #connects to DataBase with Date and UserId asking for all the tasks of this date
+    context.bot.send_message(chat_id=update.callback_query.from_user.id, text="Is there any other way I can help you?",
+                             reply_markup=markup)
 
 
 def see_history(update, context):
     logger.info('User seeing history')
-
-    update.message.reply_text(' Can I help you more?',
-                              reply_markup=markup)
-    return CHOOSING
+    #connects to DataBase with UserId asking for all the meds currently taking
+    user_id = update.message.from_user.id
+    return choose_function(update, context)
 
 
 def delete_reminder(update, context):
-    update.message.reply_text(' Can I help you more?',
-                              reply_markup=markup)
     logger.info('User deleting reminder')
-    return CHOOSING
+    update.message.reply_text('Please Introduce CN of the Medicine you want to delete the reminder:')
+    return GET_CN
 
+def get_medicine_CN(update, context):
+    medicine_CN = update.message.text
+    #connects to DataBase with UserId and get the current reminder for this medicine_CN.
+    update.message.reply_text('Reminder asked to be removed:\n\tMedicine: \n\tTaken from:\n\tEnd date:\n\tFrequency: ')
+    update.message.reply_text('Is this the reminder you want to remove? ', reply_markup=yes_no_markup)
+    return CHECK_REM
 
 def done(update, context):
     update.message.reply_text("See you next time")
@@ -174,10 +178,9 @@ def done(update, context):
 
 
 def create_journey(update, context):
-    update.message.reply_text(' Can I help you more?',
-                              reply_markup=markup)
+
     logger.info('User creating journey')
-    return CHOOSING
+    return choose_function(update, context)
 
 
 def main():
@@ -203,10 +206,14 @@ def main():
                                       create_journey),
                        ],
             INTR_MEDICINE: [MessageHandler(Filters.text, send_new_medicine)],
-            CHECK: [MessageHandler(Filters.regex('^YES$'), choose_function),
+            CHECK_MED: [MessageHandler(Filters.regex('^YES$'), choose_function),
                     MessageHandler(Filters.regex('^NO$'), intr_medicine)
                     ],
-            CALENDAR_CHOOSE: [MessageHandler(Filters.text, inline_handler)]
+            CHECK_REM: [MessageHandler(Filters.regex('^YES$'), choose_function),
+                    MessageHandler(Filters.regex('^NO$'), delete_reminder)
+                    ],
+            CALENDAR_CHOOSE: [MessageHandler(Filters.text, inline_handler)],
+            GET_CN: [MessageHandler(Filters.text, get_medicine_CN)]
 
         },
         fallbacks=[MessageHandler(Filters.regex('^Done$'), done)]
