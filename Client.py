@@ -292,7 +292,7 @@ def see_history(update, context):
     #connects to DataBase with UserId asking for all the meds currently taking
     user_id = update.message.from_user.id
     set_function(user_id, "HISTORY")
-    set_query(user_id, "[ user_id : "+ user_id+"]")
+    set_query(user_id, "[ user_id : "+ str(user_id)+"]")
     query = create_query(user_id)
 
     return choose_function
