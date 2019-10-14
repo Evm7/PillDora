@@ -80,8 +80,11 @@ def set_counter(user_id, num):
 def get_counter(user_id):
     return aide_bot[user_id]['intr_medicine_counter']
 
-def set_query(user_id, text):
-    aide_bot[user_id]['query']=text
+def set_query(user_id, keys, values):
+    parameters={}
+    for key in keys:
+        parameters[key] = values[keys.index(key)]
+    aide_bot[user_id]['query']=parameters
 
 def get_query(user_id):
     return aide_bot[user_id]['query']
@@ -109,7 +112,7 @@ def create_query(user_id):
 def start(update, context):
     user_id = update.message.from_user.id
     name = get_name(update.message.from_user)
-    aide_bot[user_id]={'states': [LOGIN, LOGIN], 'intr_medicine_counter':0, 'medicine':{tag: '' for tag in MEDICINE_TAGS}, 'journey':['None', 'None'], 'function':'none', 'query': "none", 'serverworker' : ServerWorker(user_id)}
+    aide_bot[user_id]={'states': [LOGIN, LOGIN], 'intr_medicine_counter':0, 'medicine':{tag: '' for tag in MEDICINE_TAGS}, 'journey':['None', 'None'], 'function':'none', 'query': {}, 'serverworker' : ServerWorker(user_id)}
     logger.info('User '+ name+' has connected to AideBot: ID is ' + str(user_id))
     context.bot.send_message(chat_id=user_id, text=("Welcome " + name + " ! My name is AideBot"))
 
@@ -138,7 +141,7 @@ def get_name(user):
 # Verificates is UserID has account or it is first visit in AideBot
 def user_verification(user_id):
     set_function(user_id, 'CHECK USER')
-    set_query(user_id, ['user_id : '+str(user_id)])
+    set_query(user_id, ["user_id"], [str(user_id)])
     query=create_query(user_id)
     return (send_query(user_id, query))
 
@@ -146,7 +149,7 @@ def user_verification(user_id):
 # Verificates password for UserID in DataBase
 def pwd_verification(password, user_id):
     set_function(user_id, 'CHECK PASSWORD')
-    set_query(user_id, ['password : '+password])
+    set_query(user_id, ['password'], [password])
     query = create_query(user_id)
     return (send_query(user_id, query))
 
@@ -189,7 +192,7 @@ def new_user(update, context):
         update.message.reply_text("Valid Password")
         # Introduce new UserID-Password to DataBase
         set_function(user_id, 'NEW PASSWORD')
-        set_query(['new_password : '+ password])
+        set_query(['new_password'], [password])
         query = create_query(user_id)
         send_query(user_id, query)
         update.message.reply_text('Welcome ' + get_name(update.message.from_user) + '. How can I help you?', reply_markup=markup)
@@ -223,7 +226,7 @@ def choose_function(update, context):
             logger.info("Medicines to take during journey correctly retrieved")
             update.message.reply_text("Medicines to take during journey:\n"+ response['parameters'])
 
-    set_query(user_id, "None")
+    set_query(user_id, ["None"], ["None"])
     set_function(user_id, "None")
     logger.info('User ' +get_name(update.message.from_user)+ ' in the menu')
     update.message.reply_text("Is there any other way I can help you?", reply_markup=markup)
@@ -259,7 +262,7 @@ def send_new_medicine(update, context):
                                 text='Is the medicine correctly introduced? ', reply_markup=yes_no_markup)
         context.bot.send_message(chat_id=user_id,
                                 text=show_medicine(user_id))
-        set_query(user_id, str.replace(str.replace(show_medicine(user_id),"{","["),"}","]"))
+        set_query(user_id, list(get_medicine(user_id).keys()), list(get_medicine(user_id).values()))
         set_function(user_id, 'INTRODUCE MEDICINE')
         return set_state(user_id, CHECK_MED)
 
@@ -304,7 +307,7 @@ def get_calendar_tasks(update, context, date, user_id):
     logger.info('Tasks for the user on the date '+ date)
     #connects to DataBase with Date and UserId asking for all the tasks of this date
     set_function(user_id, "TASKS CALENDAR")
-    set_query(user_id, "[ date : "+ date+"]")
+    set_query(user_id, ["date"], [date])
     query = create_query(user_id)
     response= send_query(user_id, query)
     context.bot.send_message(chat_id=user_id,
@@ -318,11 +321,11 @@ def see_history(update, context):
     #connects to DataBase with UserId asking for all the meds currently taking
     user_id = update.message.from_user.id
     set_function(user_id, "HISTORY")
-    set_query(user_id, "[ user_id : "+ str(user_id)+"]")
+    set_query(user_id, ["user_id"], [str(user_id)])
     query = create_query(user_id)
     response=send_query(user_id, query)
     update.message.reply_text("To som up, you are currently taking these meds:\n"+response['parameters'])
-    set_query(user_id,'None')
+    set_query(user_id,["None"],["None"])
     return choose_function(update, context)
 
 @run_async
@@ -336,12 +339,12 @@ def get_medicine_CN(update, context):
     user_id=update.message.from_user.id
     #connects to DataBase with UserId and get the current reminder for this medicine_CN.
     set_function(user_id, "GET REMINDER")
-    set_query(user_id, "[CN : "+medicine_CN+"]")
+    set_query(user_id, ["CN"],[medicine_CN])
     query = create_query(user_id)
     response = send_query(user_id, query)
     update.message.reply_text('Reminder asked to be removed:\n'+ response['parameters'])
     update.message.reply_text('Is this the reminder you want to remove? ', reply_markup=yes_no_markup)
-    set_query(user_id, response['parameters']['CN'])
+    set_query(user_id, ["CN"], [response['parameters']['CN']])
     set_function(user_id, 'DELETE REMINDER')
     return set_state(user_id, CHECK_REM)
 
@@ -376,7 +379,7 @@ def set_journey(update, context, date):
         context.bot.send_message(chat_id=user_id,
                                  text="The arrival Date is on "+ date+"\nIs this information correct?",
                                   reply_markup=yes_no_markup)
-        set_query(user_id, "[departure_date : "+ get_dates(user_id)[0]+", arrival date : "+get_dates(user_id)[1]+"]")
+        set_query(user_id, ["departure_date", "arrival_date"], [get_dates(user_id)[0], get_dates(user_id)[1]])
         set_function(user_id, 'JOURNEY')
 
 def exit(update, context):
@@ -387,7 +390,7 @@ def exit(update, context):
 def main():
     # Create the Updater and pass it your bot's token.
     # Make sure to set use_context=True to use the new context based callbacks
-    updater = Updater(token=TOKEN_AIDEBOT, use_context=True, workers=50)
+    updater = Updater(token=TOKEN_PROVE, use_context=True, workers=50)
     dp = updater.dispatcher
     conv_handler = ConversationHandler(
         allow_reentry=True,
