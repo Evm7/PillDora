@@ -1,0 +1,11 @@
+cv2
+pytesseract
+imutils
+numpy
+telegram
+datetime
+pycparser
+pymysql
+requests
+schedule
+
