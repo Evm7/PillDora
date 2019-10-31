@@ -40,10 +40,14 @@ class Reminder:
             before_now = now - datetime.timedelta(minutes=30)
             now = now.strftime('%H:%M:%S')
             before_now = before_now.strftime('%H:%M:%S')
-            data = db.query('''SELECT national_code, time, user_id
-                                       FROM aidebot.daily_reminders 
-                                       WHERE time >= '{before_now}' and time<='{now}' and taken=0
-                                       '''.format(before_now=before_now, now=now))
+
+            data = db.query('''SELECT national_code, time, user_id FROM aidebot.daily_reminders WHERE taken!=3''')
+
+            #  data = db.query('''SELECT national_code, time, user_id
+            #                            FROM aidebot.daily_reminders
+            #                            WHERE time >= '{before_now}' and time<='{now}' and taken=0
+            #                            '''.format(before_now=before_now, now=now))
+
             self.client.send_reminders(data)
 
     # Delete information older than 3 days from history table

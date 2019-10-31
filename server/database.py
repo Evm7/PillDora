@@ -173,32 +173,48 @@ class DBMethods:
             '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and national_code = {cn}'''.format(
                 id=user_id, time=time, cn=query_parsed['NAME']))
         print(min_time)
-        db.execute('''update aidebot.daily_reminders set Taken = 1 where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
-            id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
+        db.execute(
+            '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
+                id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
 
         data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
         if data is ():
             return "0"
         return "1"
 
+    def postpone_or_check_reminder(self, user_id, time, cn, condition):
+        with Database() as db:
+            if condition=="True":
+                num=3
+            else:
+                data=db.query(''' SELECT Taken FROM aidebot.daily_reminders
+                WHERE user_id={id} and national_code={cn} and time={time}
+                '''.format(id=user_id), cn=cn, time=time)
+                num=data[0][0]+1
+
+            db.execute(
+                '''update aidebot.daily_reminders set Taken = {Num} where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
+                    id=user_id, time=time, cn=cn, Num=num))
+
+            return num
+
     def intr_to_history(self, user_id, query_parsed):
         data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
         if query_parsed['BOOLEAN'] == "True" and data is ():
             return "False"
 
-        with Database() as db:
-            db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
-                                   values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
-                                                                                    cn=query_parsed['NAME'],
-                                                                                    date=query_parsed[
-                                                                                        'DATE'],
-                                                                                    boolean=query_parsed[
-                                                                                        'BOOLEAN'],
-                                                                                    ))
-            db.execute(
-                '''update aidebot.daily_reminders set Taken = {Boolean} where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
-                    id=user_id, time=query_parsed['DATE'].split(" ")[1], cn=query_parsed['NAME'],  boolean=query_parsed[
-                                                                                        'BOOLEAN'],))
+        num = self.postpone_or_check_reminder(user_id=user_id, time=query_parsed['DATE'].split(" ")[1], cn=query_parsed['NAME'],
+                               condition=query_parsed['BOOLEAN'], )
+        if num==3:
+            with Database() as db:
+                db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
+                                       values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
+                                                                                        cn=query_parsed['NAME'],
+                                                                                        date=query_parsed[
+                                                                                            'DATE'],
+                                                                                        boolean=query_parsed[
+                                                                                            'BOOLEAN'],
+                                                                                        ))
             return "True"
 
     def get_history(self, user_id):
