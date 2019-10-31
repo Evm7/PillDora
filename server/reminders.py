@@ -40,17 +40,9 @@ class Reminder:
             before_now = now - datetime.timedelta(minutes=30)
             now = now.strftime('%H:%M:%S')
             before_now = before_now.strftime('%H:%M:%S')
-            # this will be extract afterwards
-            query = '''SELECT national_code, time, user_id
-                                       FROM aidebot.daily_reminders 
-                                       WHERE time >= '{before_now}' and time>='{now}'
-                                       '''.format(before_now=before_now, now=now)
-            print(query)
-            # till here
-
             data = db.query('''SELECT national_code, time, user_id
                                        FROM aidebot.daily_reminders 
-                                       WHERE time >= '{before_now}' and time<='{now}'
+                                       WHERE time >= '{before_now}' and time<='{now}' and taken=0
                                        '''.format(before_now=before_now, now=now))
             self.client.send_reminders(data)
 

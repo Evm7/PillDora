@@ -155,6 +155,32 @@ class DBMethods:
                 '''.format(id=user_id))
             return data
 
+    def intr_taken_pill(self, user_id, query_parsed):
+        query_parsed['DATE'] = datetime.datetime.now()
+        query_parsed['BOOLEAN'] = "True"
+        time = datetime.datetime.now().strftime("%H:%M:%S")
+        with Database() as db:
+            db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
+                                          values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
+                                                                                           cn=query_parsed['NAME'],
+                                                                                           date=query_parsed[
+                                                                                               'DATE'],
+                                                                                           boolean=query_parsed[
+                                                                                               'BOOLEAN'],
+                                                                                           ))
+        # verify if user has any daily reminder of this med. If so, mark next reminder as taken
+        min_time = db.query(
+            '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and national_code = {cn}'''.format(
+                id=user_id, time=time, cn=query_parsed['NAME']))
+        print(min_time)
+        db.execute('''update aidebot.daily_reminders set Taken = 1 where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
+            id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
+
+        data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
+        if data is ():
+            return "0"
+        return "1"
+
     def intr_to_history(self, user_id, query_parsed):
         data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
         if query_parsed['BOOLEAN'] == "True" and data is ():
@@ -169,6 +195,10 @@ class DBMethods:
                                                                                     boolean=query_parsed[
                                                                                         'BOOLEAN'],
                                                                                     ))
+            db.execute(
+                '''update aidebot.daily_reminders set Taken = {Boolean} where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
+                    id=user_id, time=query_parsed['DATE'].split(" ")[1], cn=query_parsed['NAME'],  boolean=query_parsed[
+                                                                                        'BOOLEAN'],))
             return "True"
 
     def get_history(self, user_id):
@@ -207,7 +237,7 @@ class DBMethods:
 
     def get_reminders(self, user_id, date, to_date=None, cn=None):
         with Database() as db:
-            # Journey state: checking remined for some days
+            # Journey state: checking reminder for some days
             if to_date:
                 date_list = self.get_array_dates(init_date=date, end_date=to_date)
                 journey_info = {}

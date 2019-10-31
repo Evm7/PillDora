@@ -89,6 +89,11 @@ class ServerWorker:
             self.checker.intr_inventory(user_id=user_id, query_parsed=parsed_string["parameters"])
             response = self.bot_parser(user_id=user_id, function="INTRODUCE MEDICINE") + """ "Code": "0"}}"""
 
+        # INTRODUCING NEW MEDICINE BOUGHT:
+        elif instruction == "TAKE PILL":
+            out=self.checker.intr_taken_pill(user_id=user_id, query_parsed=parsed_string["parameters"])
+            response = self.bot_parser(user_id=user_id, function="TAKE PILL") + '"Code": "'+out+'"}}'
+
         # THE USER WANTS TO PLAN A JOURNEY
         elif instruction == "JOURNEY":
             # WE OUTPUT A SERIES OF ACTIONS TO BE DONE FROM A LEAVING DATE TO THE DEPARTURE ONE
