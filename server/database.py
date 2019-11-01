@@ -173,13 +173,14 @@ class DBMethods:
                 '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and 
                 national_code = {cn}'''.format(
                     id=user_id, time=time, cn=query_parsed['NAME']))
-            print(min_time)
-            db.execute(
-                '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and 
-                national_code = {cn}'''.format(
-                    id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
+            if min_time[0][0] is not None:
+                db.execute(
+                    '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and 
+                    national_code = {cn}'''.format(
+                        id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
 
             data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
+            print(data)
             if data is ():
                 return "0"
             return "1"
@@ -336,7 +337,7 @@ class DBMethods:
                             FROM aidebot.inventory 
                             WHERE national_code >= '{cn}' and user_id={id}
                             '''.format(cn=cn, id=user_id))
-            if data is not ():
+            if data[0][0] is not None:
                 exp_date = datetime.datetime.strftime(data[0][0], "%Y-%m-%d")
 
                 # get the quantity that is taken in each reminder
@@ -350,22 +351,22 @@ class DBMethods:
                     '''UPDATE aidebot.inventory SET num_of_pills=num_of_pills-{quantity} where user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
                         cn=cn, id=user_id, exp_date=exp_date, quantity=quantity))
 
-                #check if there is enough pills in inventory for the following three days:
-                today=datetime.datetime.now()
-                data=db.query('''SELECT end_date
+                # check if there is enough pills in inventory for the following three days:
+                today = datetime.datetime.now()
+                data = db.query('''SELECT end_date
                                 FROM aidebot.receipts 
                                 WHERE national_code >= '{cn}' and user_id={id}
                                 '''.format(cn=cn, id=user_id))
-                if data is not () :
-                    end_date=data[0][0]
+                if data is not ():
+                    end_date = data[0][0]
                     pills_needed = min(self.days_between(today, end_date), 3) * quantity
-                    data=db.query('''SELECT SUM(num_of_pills)
+                    data = db.query('''SELECT SUM(num_of_pills)
                                                 FROM aidebot.inventory 
                                                 WHERE national_code >= '{cn}' and user_id={id}
                                                 '''.format(cn=cn, id=user_id))
                     if data is not ():
-                        pills_in=data[0][0]
-                        if pills_in>=pills_needed:
+                        pills_in = data[0][0]
+                        if pills_in >= pills_needed:
                             return "No reminder"
             return "Remind to buy"
 

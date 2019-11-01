@@ -375,12 +375,12 @@ class PillDora:
 
             elif response['function'] == "TAKE PILL":
                 logger.info("Pills taken correctly introduced to history")
-                if response['parameters']["Code"] == "0":
+                if response['parameters']["Code"] == "1":
                     logger.info("Pill taken correctly introduced")
                     self.bot.send_message(chat_id=user_id, text="Pills taken correctly introduced in the history")
-                elif response['parameters']["Code"] == "1":
+                elif response['parameters']["Code"] == "0":
                     logger.info("Pill taken correctly introduced. However, no inventory for these pills.")
-                    self.bot.send_message(chat_id=user_id, text="Pills taken correctly introduced in the history. However, there is no record of these pills n the invetory. Please introduce them")
+                    self.bot.send_message(chat_id=user_id, text="Pills taken correctly introduced in the history. However, there is no record of these pills in the inventory. Please introduce them")
 
         self.set_query(user_id, ["None"], ["None"])
         self.set_function(user_id, "None")
