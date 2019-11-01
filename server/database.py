@@ -170,11 +170,13 @@ class DBMethods:
                                                                                            ))
         # verify if user has any daily reminder of this med. If so, mark next reminder as taken
         min_time = db.query(
-            '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and national_code = {cn}'''.format(
+            '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and 
+            national_code = {cn}'''.format(
                 id=user_id, time=time, cn=query_parsed['NAME']))
         print(min_time)
         db.execute(
-            '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
+            '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and 
+            national_code = {cn}'''.format(
                 id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
 
         data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
@@ -184,13 +186,13 @@ class DBMethods:
 
     def postpone_or_check_reminder(self, user_id, time, cn, condition):
         with Database() as db:
-            if condition=="True":
-                num=3
+            if condition == "True":
+                num = 3
             else:
-                data=db.query(''' SELECT Taken FROM aidebot.daily_reminders
+                data = db.query(''' SELECT Taken FROM aidebot.daily_reminders
                 WHERE user_id={id} and national_code={cn} and time={time}
                 '''.format(id=user_id), cn=cn, time=time)
-                num=data[0][0]+1
+                num = data[0][0] + 1
 
             db.execute(
                 '''update aidebot.daily_reminders set Taken = {Num} where time = '{time}' and user_id = {id} and national_code = {cn}'''.format(
@@ -203,9 +205,10 @@ class DBMethods:
         if query_parsed['BOOLEAN'] == "True" and data is ():
             return "False"
 
-        num = self.postpone_or_check_reminder(user_id=user_id, time=query_parsed['DATE'].split(" ")[1], cn=query_parsed['NAME'],
-                               condition=query_parsed['BOOLEAN'], )
-        if num==3:
+        num = self.postpone_or_check_reminder(user_id=user_id, time=query_parsed['DATE'].split(" ")[1],
+                                              cn=query_parsed['NAME'],
+                                              condition=query_parsed['BOOLEAN'], )
+        if num == 3:
             with Database() as db:
                 db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
                                        values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
@@ -346,6 +349,25 @@ class DBMethods:
                 db.execute(
                     '''UPDATE aidebot.inventory SET num_of_pills=num_of_pills-{quantity} where user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
                         cn=cn, id=user_id, exp_date=exp_date, quantity=quantity))
+
+                #check if there is enough pills in inventory for the following three days:
+                today=datetime.datetime.now()
+                data=db.query('''SELECT end_date
+                                FROM aidebot.receipts 
+                                WHERE national_code >= '{cn}' and user_id={id}
+                                '''.format(cn=cn, id=user_id))
+                if data is not () :
+                    end_date=data[0][0]
+                    pills_needed = min(self.days_between(today, end_date), 3) * quantity
+                    data=db.query('''SELECT SUM(num_of_pills)
+                                                FROM aidebot.inventory 
+                                                WHERE national_code >= '{cn}' and user_id={id}
+                                                '''.format(cn=cn, id=user_id))
+                    if data is not ():
+                        pills_in=data[0][0]
+                        if pills_in>=pills_needed:
+                            return "No reminder"
+            return "Remind to buy"
 
 
 if __name__ == "__main__":

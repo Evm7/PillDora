@@ -869,10 +869,14 @@ class PillDora:
         self.set_query(user_id, ["user_id", "NAME", "DATE", "BOOLEAN"],
                        [str(user_id), reminder['cn'], reminder['time'], "True"])
         query = self.create_query(user_id)
-        response = self.send_query(user_id, query)
-        if response == "False":
+        response = json.loads(self.send_query(user_id, query))
+        if response['parameters']['boolean'] == "False":
             update.message.reply_text(
                 "There is no Inventory for this medicine. Please introduce Medication or buy it if not done")
+            self.show_location(user_id)
+        if response['parameters']['remind'] == "Remind to buy":
+            update.message.reply_text(
+                "Alert! You will actually run out of pills of "+cima.get_med_name(reminder['cn'])+". Please buy it and introduce to your Inventory")
             self.show_location(user_id)
         self.event.set()
         self.set_state(user_id, END)

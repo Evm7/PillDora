@@ -169,9 +169,9 @@ class ServerWorker:
         elif instruction == "INTRODUCE HISTORY":
             history = self.checker.intr_to_history(user_id=user_id, query_parsed=parsed_string["parameters"])
             if parsed_string["parameters"]["BOOLEAN"] == "True":
-                self.checker.reminder_taken(user_id=user_id, cn=parsed_string["parameters"]["NAME"])
+                query= self.checker.reminder_taken(user_id=user_id, cn=parsed_string["parameters"]["NAME"])
             response = self.bot_parser(user_id=user_id,
-                                       function="INTRODUCE HISTORY") + '"boolean" : "' + str(history) + '"}}'
+                                       function="INTRODUCE HISTORY") + '"boolean" : "' + str(history) + '"remind":"'+query+'"}}'
 
             # THE USER ASKS FOR THE HISTORY OF PILLS TAKEN
         elif instruction == "INVENTORY":
