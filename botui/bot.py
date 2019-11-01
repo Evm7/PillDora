@@ -59,7 +59,7 @@ MEDICINE_TAGS = ['NAME', 'QUANTITY', 'EXP_DATE']
 
 # TAGS TO MANAGE INTRODUCING PILL TAKEN
 INTR_PILL_MSSGS = ["What is the medicine's name (CN)?\nYou can also send me a photo of the package!",
-                   "How many pills have you takn?"]
+                   "How many pills have you taken?"]
 PILL_TAGS = ['NAME', 'QUANTITY']
 
 # KEYBOARD AND MARKUPS

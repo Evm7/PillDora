@@ -168,21 +168,21 @@ class DBMethods:
                                                                                            boolean=query_parsed[
                                                                                                'BOOLEAN'],
                                                                                            ))
-        # verify if user has any daily reminder of this med. If so, mark next reminder as taken
-        min_time = db.query(
-            '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and 
-            national_code = {cn}'''.format(
-                id=user_id, time=time, cn=query_parsed['NAME']))
-        print(min_time)
-        db.execute(
-            '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and 
-            national_code = {cn}'''.format(
-                id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
+            # verify if user has any daily reminder of this med. If so, mark next reminder as taken
+            min_time = db.query(
+                '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and 
+                national_code = {cn}'''.format(
+                    id=user_id, time=time, cn=query_parsed['NAME']))
+            print(min_time)
+            db.execute(
+                '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and 
+                national_code = {cn}'''.format(
+                    id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
 
-        data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
-        if data is ():
-            return "0"
-        return "1"
+            data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
+            if data is ():
+                return "0"
+            return "1"
 
     def postpone_or_check_reminder(self, user_id, time, cn, condition):
         with Database() as db:
