@@ -158,13 +158,12 @@ class DBMethods:
     def intr_taken_pill(self, user_id, query_parsed):
         query_parsed['DATE'] = datetime.datetime.now()
         query_parsed['BOOLEAN'] = "True"
-        time = datetime.datetime.now().strftime("%H:%M:%S")
+        exact_time = datetime.datetime.now().strftime("%H:%M:%S")
         with Database() as db:
             db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
                                           values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
                                                                                            cn=query_parsed['NAME'],
-                                                                                           date=query_parsed[
-                                                                                               'DATE'],
+                                                                                           date=exact_time,
                                                                                            boolean=query_parsed[
                                                                                                'BOOLEAN'],
                                                                                            ))

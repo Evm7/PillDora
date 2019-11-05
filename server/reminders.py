@@ -12,6 +12,9 @@ class Reminder:
         self.client = arg
 
     def daily_actualizations(self):
+        # To adjust correctly the DB, each time we start it checks expirations and delete history
+        self.checking_expirations()
+        self.delete_history()
         # Every day at 01:00 the system will proceed to check if any reminder needs to be removed as expired
         schedule.every().day.at("01:00").do(self.checking_expirations)
         schedule.every().day.at("02:00").do(self.delete_history)

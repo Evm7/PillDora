@@ -925,9 +925,9 @@ class PillDora:
         query = self.create_query(user_id)
         response = json.loads(self.send_query(user_id, query))
         if (response["parameters"]["boolean"] == "Pospone"):
-            self.bot.send_message(user_id=user_id, text="Message has been posponed correctly.")
+            self.bot.send_message(chat_id=user_id, text="Message has been posponed correctly.")
         else:
-            self.bot.send_message(user_id=user_id,
+            self.bot.send_message(chat_id=user_id,
                                   text="Message has already been posponed 3 times and not taken.\nNo more notiifcations will be set of this reminder\n. Choose take pill to introduce it")
         self.event.set()
         self.set_state(user_id, END)
