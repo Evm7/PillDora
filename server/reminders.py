@@ -15,11 +15,11 @@ class Reminder:
         # Every day at 01:00 the system will proceed to check if any reminder needs to be removed as expired
         schedule.every().day.at("01:00").do(self.checking_expirations)
         schedule.every().day.at("02:00").do(self.delete_history)
-        schedule.every(15).minutes.do(self.remind_information)
+        schedule.every(1).minutes.do(self.remind_information)
         while True:
             schedule.run_pending()
-            # Sleeps for half an hour
-            time.sleep(30)
+            # Sleeps for 1 minute
+            time.sleep(60)
 
     # Delete all reminders which has expired by end_date < today
     def test(self):

@@ -180,7 +180,6 @@ class DBMethods:
                         id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
 
             data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
-            print(data)
             if data is ():
                 return "0"
             return "1"
@@ -191,8 +190,8 @@ class DBMethods:
                 num = 3
             else:
                 data = db.query(''' SELECT Taken FROM aidebot.daily_reminders
-                WHERE user_id={id} and national_code={cn} and time={time}
-                '''.format(id=user_id), cn=cn, time=time)
+                WHERE user_id={id} and national_code={cn} and time='{time}'
+                '''.format(id=user_id, cn=cn, time=time))
                 num = data[0][0] + 1
 
             db.execute(
@@ -206,10 +205,11 @@ class DBMethods:
         if query_parsed['BOOLEAN'] == "True" and data is ():
             return "False"
 
-        num = self.postpone_or_check_reminder(user_id=user_id, time=query_parsed['DATE'].split(" ")[1],
+        num = self.postpone_or_check_reminder(user_id=user_id, time=query_parsed['DATE'],
                                               cn=query_parsed['NAME'],
                                               condition=query_parsed['BOOLEAN'], )
         if num == 3:
+            date=datetime.datetime.now().strftime("%Y-%m-%d") + " " + query_parsed["DATE"]
             with Database() as db:
                 db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
                                        values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
@@ -220,6 +220,7 @@ class DBMethods:
                                                                                             'BOOLEAN'],
                                                                                         ))
             return "True"
+        return "Pospone"
 
     def get_history(self, user_id):
         with Database() as db:
