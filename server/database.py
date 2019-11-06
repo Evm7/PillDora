@@ -213,8 +213,7 @@ class DBMethods:
                 db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
                                        values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
                                                                                         cn=query_parsed['NAME'],
-                                                                                        date=query_parsed[
-                                                                                            'DATE'],
+                                                                                        date=date,
                                                                                         boolean=query_parsed[
                                                                                             'BOOLEAN'],
                                                                                         ))
@@ -282,9 +281,7 @@ class DBMethods:
                 return self.get_calendar(user_id, date)
 
     def days_between(self, d1, d2):
-        d1 = datetime.datetime.strptime(d1, "%Y-%m-%d")
-        d2 = datetime.datetime.strptime(d2, "%Y-%m-%d")
-        return (abs((d2 - d1).days) + 1)
+        return (abs((d2 - d1).days)+1)
 
     def get_array_dates(self, init_date, end_date):
         in_date = datetime.datetime.strptime(init_date, '%Y-%m-%d')
@@ -359,13 +356,13 @@ class DBMethods:
                                 '''.format(cn=cn, id=user_id))
                 if data is not ():
                     end_date = data[0][0]
-                    pills_needed = min(self.days_between(today, end_date), 3) * quantity
+                    pills_needed = min(self.days_between(today, end_date), 3) * int(quantity)
                     data = db.query('''SELECT SUM(num_of_pills)
                                                 FROM aidebot.inventory 
                                                 WHERE national_code >= '{cn}' and user_id={id}
                                                 '''.format(cn=cn, id=user_id))
                     if data is not ():
-                        pills_in = data[0][0]
+                        pills_in = int(data[0][0])
                         if pills_in >= pills_needed:
                             return "No reminder"
             return "Remind to buy"

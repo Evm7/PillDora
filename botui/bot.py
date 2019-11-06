@@ -71,12 +71,13 @@ reply_keyboard = [
     [u'Journey \U0000270D', u'Calendar \U0001F4C6', u'Location \U0001F5FE', u'Exit \U0001F6AA']]
 yes_no_reply_keyboard = [['YES', 'NO']]
 taken_pill_keyboard = [['TAKEN', 'POSPONE']]
-loc_keyboard = KeyboardButton(text="Send location", request_location=True)
+loc_button = KeyboardButton(text="Send Location", request_location=True)
+location_keyboard = [[loc_button, "Don't Send Location"]]
 
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 yes_no_markup = ReplyKeyboardMarkup(yes_no_reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 taken_pill_markup = ReplyKeyboardMarkup(taken_pill_keyboard, one_time_keyboard=True, resize_keyboard=True)
-loc_markup = ReplyKeyboardMarkup(loc_keyboard)
+loc_markup = ReplyKeyboardMarkup(location_keyboard)
 
 
 class PillDora:
@@ -679,7 +680,7 @@ class PillDora:
 
     def show_location(self, update, context):
         user_id = update.message.from_user.id
-        self.bot.send_message(chat_id=user_id, text="Send Location", reply_markup=loc_markup)
+        self.bot.send_message(chat_id=user_id, text="Would you like to search for nearest pharmacies?", reply_markup=loc_markup)
         return self.set_state(user_id, LOCATION)
 
     def print_location(self, update, context):
@@ -913,6 +914,8 @@ class PillDora:
                 "Alert! You will actually run out of pills of " + cima.get_med_name(
                     reminder['cn']) + ". Please buy it and introduce to your Inventory")
             self.show_location(user_id=user_id)
+        elif response['parameters']['remind'] == "No reminder":
+            update.message.reply_text("Good Job")
         self.event.set()
         self.set_state(user_id, END)
 
@@ -928,7 +931,7 @@ class PillDora:
             self.bot.send_message(chat_id=user_id, text="Message has been posponed correctly.")
         else:
             self.bot.send_message(chat_id=user_id,
-                                  text="Message has already been posponed 3 times and not taken.\nNo more notiifcations will be set of this reminder\n. Choose take pill to introduce it")
+                                  text="Message has already been posponed 3 times and not taken.\nNo more notiifcations will be set of this reminder.\n Choose 'Take pill' to introduce it")
         self.event.set()
         self.set_state(user_id, END)
 
@@ -980,7 +983,9 @@ class PillDora:
                 INTR_MEDICINE: [MessageHandler(Filters.text | Filters.photo, self.send_new_medicine)],
                 TAKE_PILL: [MessageHandler(Filters.text | Filters.photo, self.send_new_pill)],
                 SHOW_INFORMATION: [MessageHandler(Filters.text | Filters.photo, self.show_infoAbout)],
-                LOCATION: [MessageHandler(Filters.location, self.print_location)],
+                LOCATION: [MessageHandler(Filters.location, self.print_location),
+                           MessageHandler(Filters.regex("^Don't Send Location"), self.manage_response)
+                           ],
                 CHECK_PRE: [MessageHandler(Filters.regex('^YES$'), self.manage_response),
                             MessageHandler(Filters.regex('^NO$'), self.intr_prescription)
                             ],

@@ -22,7 +22,7 @@ class Reminder:
         while True:
             schedule.run_pending()
             # Sleeps for 1 minute
-            time.sleep(60)
+            time.sleep(30)
 
     # Delete all reminders which has expired by end_date < today
     def test(self):
@@ -56,8 +56,8 @@ class Reminder:
     # Delete information older than 3 days from history table
     def delete_history(self):
         with Database() as db:
-            db.execute('''DELETE FROM aidebot.history WHERE (end_date<'{date}')'''.format(
-                date=datetime.datetime.utcnow() - datetime.timedelta(days=3)))
+            db.execute('''DELETE FROM aidebot.history WHERE (last_taken_pill<'{date}')'''.format(
+                date=datetime.datetime.now() - datetime.timedelta(days=3)))
 
 
 if __name__ == "__main__":
