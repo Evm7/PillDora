@@ -463,18 +463,23 @@ class PillDora:
                 return CHECK_PRE
         else:
             self.set_counter(user_id, 0)
+            a= list(self.get_prescription(user_id).keys())
+            a.append('NAME REAL')
+            b=list(self.get_prescription(user_id).values())
+            b.append(cima.get_med_name(self.get_prescription(user_id)['NAME REAL']))
+            print(a)
+            print(b)
             context.bot.send_message(chat_id=user_id,
                                      text='Is the medicine correctly introduced? ', reply_markup=yes_no_markup)
             context.bot.send_message(chat_id=user_id,
                                      text=self.show_prescription(user_id), parse_mode=telegram.ParseMode.MARKDOWN)
-            self.set_query(user_id, list(self.get_prescription(user_id).keys()).append('NAME'),
-                           list(self.get_prescription(user_id).values()).append(cima.get_med_name(self.get_prescription(user_id)['NAME'])))
+
+            self.set_query(user_id, a, b)
             self.set_function(user_id, 'INTRODUCE PRESCRIPTION')
             return self.set_state(user_id, CHECK_PRE)
 
     def handle_pic(self, update, context, user_id):
         """
-
         :param update:
         :param context:
         :param user_id:
@@ -516,7 +521,7 @@ class PillDora:
 
         date_str = self.get_prescription(user_id)['END_DATE']
         if date_str == MAX_DATE:
-            med_str += "*chronically*!"
+            med_str += " *chronically*!"
         else:
             med_str += " until the end date of *" + date_str + "* !"
         return med_str
@@ -747,9 +752,10 @@ class PillDora:
     # Method that handles the situations and depending on the current state, changes the state
     def inline_handler(self, update, context):
         selected, date = telegramcalendar.process_calendar_selection(context.bot, update)
-        date_str = date.strftime("%Y-%m-%d")
-        if date_str == MAX_DATE:
-            date_str = "CHRONIC"
+        if date is not None:
+            date_str = date.strftime("%Y-%m-%d")
+            if date_str == MAX_DATE:
+                date_str = "CHRONIC"
         user_id = update.callback_query.from_user.id
         if selected:
             if self.get_states(user_id)[0] == CHOOSING:
