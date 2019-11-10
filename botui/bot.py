@@ -61,7 +61,7 @@ INTR_MEDICINE_MSSGS = ["What is the medicine's name (CN)?\nYou can also send me 
 MEDICINE_TAGS = ['NAME', 'QUANTITY', 'EXP_DATE']
 
 # TAGS TO MANAGE INTRODUCING PILL TAKEN
-INTR_PILL_MSSGS = ["What is the medicine's name (CN)?\nYou can also send me a photo of the package!",
+INTR_PILL_MSSGS = ["What is the medicine's name (CN)?\nChoose it from your current treatment, introduce it or you can also send me a photo of the package!",
                    "How many pills have you taken?"]
 PILL_TAGS = ['NAME', 'QUANTITY']
 
@@ -463,10 +463,10 @@ class PillDora:
                 return CHECK_PRE
         else:
             self.set_counter(user_id, 0)
-            a= list(self.get_prescription(user_id).keys())
+            a = list(self.get_prescription(user_id).keys())
             a.append('NAME REAL')
-            b=list(self.get_prescription(user_id).values())
-            b.append(cima.get_med_name(self.get_prescription(user_id)['NAME REAL']))
+            b = list(self.get_prescription(user_id).values())
+            b.append(cima.get_med_name(self.get_prescription(user_id)['NAME']))
             print(a)
             print(b)
             context.bot.send_message(chat_id=user_id,
@@ -609,8 +609,8 @@ class PillDora:
         user_id = update.message.from_user.id
         dict = self.list_of_current_cn(user_id)
         if dict is not "False":
-            dyn_markup= self.makeKeyboard(dict)
-            update.message.reply_text(INTR_PILL_MSSGS[self.get_counter(update.message.from_user.id)], dyn_markup)
+            dyn_markup = self.makeKeyboard(dict)
+            update.message.reply_text(INTR_PILL_MSSGS[self.get_counter(update.message.from_user.id)], reply_markup=dyn_markup)
         else:
             update.message.reply_text(INTR_PILL_MSSGS[self.get_counter(update.message.from_user.id)])
         return self.set_state(update.message.from_user.id, TAKE_PILL)
@@ -683,14 +683,16 @@ class PillDora:
         response = self.send_query(user_id, query)
         return json.loads(response)["parameters"]
 
-    def makeKeyboard(self, dict):
-        dyn_markup = InlineKeyboardMarkup()
-
-        for key, value in dict:
-            dyn_markup.add(InlineKeyboardButton(text=value,
-                                            callback_data=key),
-                       InlineKeyboardButton(text=crossIcon,
-                                            callback_data=key))
+    def makeKeyboard(self, arg):
+        lista = []
+        print(arg)
+        for key in arg:
+            lista.append([InlineKeyboardButton(text=arg[key],
+                                               callback_data=key),
+                          InlineKeyboardButton(text=crossIcon,
+                                               callback_data=key)])
+        print(lista)
+        dyn_markup = InlineKeyboardMarkup(lista)
         return dyn_markup
 
     @run_async
