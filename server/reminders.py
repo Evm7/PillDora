@@ -44,7 +44,9 @@ class Reminder:
             now = now.strftime('%H:%M:%S')
             before_now = before_now.strftime('%H:%M:%S')
 
-            data = db.query('''SELECT national_code, time, user_id FROM aidebot.daily_reminders WHERE taken!=3 and time<='{now}' '''.format(now=now))
+            data = db.query(
+                '''SELECT national_code, time, user_id FROM aidebot.daily_reminders WHERE (taken!=3 and time<='{now}) or (time>='23:00:00' and (Taken=1 or Taken=2) and '{now}'<'01:00:00')'''.format(
+                    now=now))
 
             #  data = db.query('''SELECT national_code, time, user_id
             #                            FROM aidebot.daily_reminders
