@@ -188,9 +188,12 @@ class DBMethods:
                         id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
 
             data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
+            print(data)
             if data is ():
                 return "0"
-            return "1"
+            else:
+                self.reminder_taken(user_id=user_id, cn=query_parsed['NAME'], quantity=str(query_parsed['QUANTITY']))
+                return "1"
 
     def postpone_or_check_reminder(self, user_id, time, cn, condition):
         with Database() as db:
@@ -336,7 +339,19 @@ class DBMethods:
                                                                                            time=time
                                                                                            ))
 
-    def reminder_taken(self, user_id, cn):
+    def get_quantity_taken(self, user_id, cn):
+        with Database() as db:
+            # get the quantity that is taken in each reminder
+            data = db.query('''SELECT quantity
+                            FROM aidebot.receipts 
+                            WHERE national_code >= '{cn}' and user_id={id}
+                            '''.format(cn=cn, id=user_id))
+            if data[0][0] is not None:
+                return data[0][0]
+            else:
+                return "0"
+
+    def reminder_taken(self, user_id, cn, quantity):
         with Database() as db:
             # there is the possibility of more than one columns of one CN
             data = db.query('''SELECT MIN(expiracy_date)
@@ -345,13 +360,6 @@ class DBMethods:
                             '''.format(cn=cn, id=user_id))
             if data[0][0] is not None:
                 exp_date = datetime.datetime.strftime(data[0][0], "%Y-%m-%d")
-
-                # get the quantity that is taken in each reminder
-                data = db.query('''SELECT quantity
-                                FROM aidebot.receipts 
-                                WHERE national_code >= '{cn}' and user_id={id}
-                                '''.format(cn=cn, id=user_id))
-                quantity = data[0][0]
                 # substract quantity to med that expires earlier
                 db.execute(
                     '''UPDATE aidebot.inventory SET num_of_pills=num_of_pills-{quantity} where user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(

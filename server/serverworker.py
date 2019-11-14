@@ -170,7 +170,8 @@ class ServerWorker:
             history = self.checker.intr_to_history(user_id=user_id, query_parsed=parsed_string["parameters"])
             query="None"
             if parsed_string["parameters"]["BOOLEAN"] == "True":
-                query= self.checker.reminder_taken(user_id=user_id, cn=parsed_string["parameters"]["NAME"])
+                quantity=self.checker.get_quantity_taken(user_id=user_id, cn=parsed_string["parameters"]["NAME"])
+                query= self.checker.reminder_taken(user_id=user_id, cn=parsed_string["parameters"]["NAME"], quantity_taken=quantity)
             response = self.bot_parser(user_id=user_id,
                                        function="INTRODUCE HISTORY") + '"boolean" : "' + str(history) + '" , "remind":"'+query+'"}}'
 
