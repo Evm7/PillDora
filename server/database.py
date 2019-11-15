@@ -181,11 +181,10 @@ class DBMethods:
                 '''select min(time) from aidebot.daily_reminders where time >= '{time}' and user_id = {id} and 
                 national_code = {cn}'''.format(
                     id=user_id, time=exact_time.strftime("%H:%M:%S"), cn=query_parsed['NAME']))
-            if min_time[0][0] is not None:
-                db.execute(
-                    '''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and 
-                    national_code = {cn}'''.format(
-                        id=user_id, time=min_time[0][0], cn=query_parsed['NAME']))
+            next_rem = "24:00:00" if str(min_time[0][0]).find("day") > 0 else str(min_time[0][0])
+            print(next_rem)
+            db.execute('''update aidebot.daily_reminders set Taken = 3 where time = '{time}' and user_id = {id} and 
+                national_code = {cn}'''.format(id=user_id, time=next_rem, cn=query_parsed['NAME']))
 
             data = self.get_cn_from_inventory(user_id, query_parsed['NAME'])
             print(data)
@@ -221,7 +220,7 @@ class DBMethods:
                                               cn=query_parsed['NAME'],
                                               condition=query_parsed['BOOLEAN'], )
         if num == 3:
-            date=datetime.datetime.now().strftime("%Y-%m-%d") + " " + query_parsed["DATE"]
+            date = datetime.datetime.now().strftime("%Y-%m-%d") + " " + query_parsed["DATE"]
             with Database() as db:
                 db.execute('''INSERT INTO aidebot.history (user_id, national_code, last_taken_pill, taken)
                                        values ({id},{cn},'{date}', {boolean})'''.format(id=user_id,
@@ -294,7 +293,7 @@ class DBMethods:
                 return self.get_calendar(user_id, date)
 
     def days_between(self, d1, d2):
-        return (abs((d2 - d1).days)+1)
+        return (abs((d2 - d1).days) + 1)
 
     def get_array_dates(self, init_date, end_date):
         in_date = datetime.datetime.strptime(init_date, '%Y-%m-%d')
@@ -364,7 +363,8 @@ class DBMethods:
             if data[0][0] is not None:
                 exp_date = datetime.datetime.strftime(data[0][0], "%Y-%m-%d %H:%M:%S")
                 # substract quantity to med that expires earlier
-                print('''UPDATE aidebot.inventory SET num_of_pills=num_of_pills-{quantity} where user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
+                print(
+                    '''UPDATE aidebot.inventory SET num_of_pills=num_of_pills-{quantity} where user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
                         cn=cn, id=user_id, exp_date=exp_date, quantity=quantity))
                 db.execute(
                     '''UPDATE aidebot.inventory SET num_of_pills=num_of_pills-{quantity} where user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
