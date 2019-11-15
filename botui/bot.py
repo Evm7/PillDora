@@ -696,11 +696,7 @@ class PillDora:
     def makeKeyboard(self, arg, user_id):
         lista = []
         for key in arg:
-            lista.append([InlineKeyboardButton(text=arg[key],
-                                               callback_data=self.set_pill(user_id=user_id, num=0, text=key)),
-                          InlineKeyboardButton(text=crossIcon,
-                                               callback_data=self.set_pill(user_id=user_id, num=0, text=key))])
-        print(lista)
+            lista.append([InlineKeyboardButton(text=arg[key], callback_data=self.set_pill(user_id=user_id, num=0, text=key))])
         dyn_markup = InlineKeyboardMarkup(lista)
         return dyn_markup
 
@@ -717,13 +713,17 @@ class PillDora:
                 reply_markup=dyn_markup)
         else:
             update.message.reply_text("Introduce CN of the Medicine you want information about:")
+        print("GET HANDLING 1")
         print(self.get_handling(user_id))
         return self.set_state(user_id=update.message.from_user.id, state=SHOW_INFORMATION)
 
     def show_infoAbout(self, update, context):
         try:
             user_id = update.message.from_user.id
+            print("GET HANDLING 2")
             print(self.get_handling(user_id))
+            print("GET pills")
+            print(self.get_pill(user_id))
             if self.get_handling(user_id) == "False":
                 if update.message.photo:  # If user sent a photo, we apply
                     medicine_cn, validation_num = self.handle_pic(update, context, user_id)
@@ -741,7 +741,10 @@ class PillDora:
                     return self.set_state(user_id=update.message.from_user.id, state=CHOOSING)
         except:
             user_id = update.callback_query.from_user.id
+            print("GET HANDLING 3")
             print(self.get_handling(user_id))
+            print("GET pills 3")
+            print(self.get_pill(user_id))
             medicine_cn = self.get_pill(user_id)['NAME']
             print(medicine_cn)
             self.bot.send_message(text=cima.get_info_about(medicine_cn), chat_id=user_id)
@@ -794,6 +797,7 @@ class PillDora:
         if self.get_states(user_id)[0] == TAKE_PILL:
             self.send_new_pill(update, context)
         elif self.get_states(user_id)[0] == SHOW_INFORMATION:
+            print("IN BRO")
             self.show_infoAbout(update, context)
             self.set_handling(user_id, "True")
         else:
