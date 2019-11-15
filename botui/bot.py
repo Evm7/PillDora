@@ -700,6 +700,7 @@ class PillDora:
                                                callback_data=self.set_pill(user_id=user_id, num=0, text=key)),
                           InlineKeyboardButton(text=crossIcon,
                                                callback_data=self.set_pill(user_id=user_id, num=0, text=key))])
+        print(lista)
         dyn_markup = InlineKeyboardMarkup(lista)
         return dyn_markup
 
