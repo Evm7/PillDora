@@ -139,11 +139,11 @@ class ServerWorker:
                 for output in current_treatment:
                     date_str = str(output[1]).split()[0]
                     if date_str == MAX_DATE:
-                        current_treatment_info += "\\t-> Taking " + cima.get_med_name(
-                            str(output[0])) + " chronically \\n"
+                        current_treatment_info += "\\t-> Taking *" + cima.get_med_name(
+                            str(output[0])) + " chronically* \\n"
                     else:
-                        current_treatment_info += "\\t-> Taking " + cima.get_med_name(
-                            str(output[0])) + " until the date of " + date_str + "\\n"
+                        current_treatment_info += "\\t-> Taking *" + cima.get_med_name(
+                            str(output[0])) + "* until the date of *" + date_str + "*\\n"
             else:
                 current_treatment_info = "False"
             response = self.bot_parser(user_id=user_id,

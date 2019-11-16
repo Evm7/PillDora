@@ -842,10 +842,9 @@ class PillDora:
         query = self.create_query(user_id)
         response = json.loads(self.send_query(user_id, query))
         if response['parameters']['reminder_info'] == "False":
-            update.message.reply_text("There is actually no Current Treatment about you in the DataBase")
+            self.bot.send_message(chat_id=user_id, text="There is actually no Current Treatment about you in the DataBase")
         else:
-            update.message.reply_text(
-                "To sum up, you are currently taking these meds:\n" + response['parameters']['reminder_info'])
+            self.bot.send_message(chat_id=user_id, text="To sum up, you are currently taking these meds:\n" + response['parameters']['reminder_info'], parse_mode=telegram.ParseMode.MARKDOWN)
         self.set_query(user_id, ["None"], ["None"])
         return self.manage_response(update, context)
 
