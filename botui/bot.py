@@ -391,12 +391,12 @@ class PillDora:
                     logger.info("Medicine correctly introduced")
 
             elif response['function'] == "DELETE REMINDER":
-                if response['parameters']:
+                if response['parameters']['boolean'] == "True":
                     logger.info("Medicine correctly deleted")
                 else:
                     logger.info("Medicine not deleted as did not exist in the database")
                     update.message.reply_text("Medicine introduced did not exist in your current Treatment.")
-                    self.delete_reminder()
+                    self.delete_reminder(update, context)
                     return self.set_state(update.message.from_user.id, CHOOSING)
 
             elif response['function'] == "JOURNEY":
@@ -651,6 +651,7 @@ class PillDora:
                 self.set_pill(user_id, self.get_counter(user_id), update.message.text)
         except:
             user_id = update.callback_query.from_user.id
+            self.set_pill(user_id, self.get_counter(user_id), update.callback_query.data)
 
         self.set_counter(user_id, self.get_counter(user_id) + 1)
         logger.info(self.get_pill(user_id))
@@ -696,7 +697,7 @@ class PillDora:
     def makeKeyboard(self, arg, user_id):
         lista = []
         for key in arg:
-            lista.append([InlineKeyboardButton(text=arg[key], callback_data=self.set_pill(user_id=user_id, num=0, text=key))])
+            lista.append([InlineKeyboardButton(text=arg[key], callback_data=key)])
         dyn_markup = InlineKeyboardMarkup(lista)
         return dyn_markup
 
@@ -720,10 +721,6 @@ class PillDora:
     def show_infoAbout(self, update, context):
         try:
             user_id = update.message.from_user.id
-            print("GET HANDLING 2")
-            print(self.get_handling(user_id))
-            print("GET pills")
-            print(self.get_pill(user_id))
             if self.get_handling(user_id) == "False":
                 if update.message.photo:  # If user sent a photo, we apply
                     medicine_cn, validation_num = self.handle_pic(update, context, user_id)
@@ -741,21 +738,17 @@ class PillDora:
                     return self.set_state(user_id=update.message.from_user.id, state=CHOOSING)
         except:
             user_id = update.callback_query.from_user.id
-            print("GET HANDLING 3")
-            print(self.get_handling(user_id))
-            print("GET pills 3")
-            print(self.get_pill(user_id))
-            medicine_cn = self.get_pill(user_id)['NAME']
-            print(medicine_cn)
+            medicine_cn = update.callback_query.data
             self.bot.send_message(text=cima.get_info_about(medicine_cn), chat_id=user_id)
-            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you?",
-                                  reply_markup=markup)
-            self.set_pill(user_id, 0, "None")
+            self.bot.send_message(text="Has this information been useful?", chat_id=user_id, reply_markup=yes_no_markup)
             return self.set_state(user_id=user_id, state=CHOOSING)
 
         print(self.get_handling(user_id))
         if self.get_handling(user_id) == "True":
-            print("True")
+            print("IN WHAT")
+            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you?",
+                                  reply_markup=markup)
+            self.set_handling(user_id=user_id, text="False")
             return self.set_state(user_id=update.message.from_user.id, state=CHOOSING)
 
     def show_location(self, user_id):
@@ -797,9 +790,10 @@ class PillDora:
         if self.get_states(user_id)[0] == TAKE_PILL:
             self.send_new_pill(update, context)
         elif self.get_states(user_id)[0] == SHOW_INFORMATION:
-            print("IN BRO")
-            self.show_infoAbout(update, context)
             self.set_handling(user_id, "True")
+            self.show_infoAbout(update, context)
+        elif self.get_states(user_id)[0] == CHECK_REM:
+            self.get_medicine_CN(update, context)
         else:
             selected, date = telegramcalendar.process_calendar_selection(context.bot, update)
             if date is not None:
@@ -908,13 +902,26 @@ class PillDora:
     # Deletes a reminder using a CN for a certain user_id
     def delete_reminder(self, update, context):
         logger.info('User ' + self.get_name(update.message.from_user) + ' deleting reminder')
-        update.message.reply_text('Please Introduce CN of the Medicine you want to delete the reminder:')
-        return self.set_state(update.message.from_user.id, GET_CN)
+        user_id = update.message.from_user.id
+        dict = self.list_of_current_cn(user_id)
+        if dict is not "False":
+            dyn_markup = self.makeKeyboard(dict, user_id)
+            update.message.reply_text('Choose medicine you want to delete from your current treatment:',
+                                      reply_markup=dyn_markup)
+            return self.set_state(user_id, CHECK_REM)
+        else:
+            update.message.reply_text('Please Introduce CN of the Medicine you want to delete the reminder:')
+            return self.set_state(user_id, GET_CN)
 
     # Method that asks for a CN and prints all the information and asks about if it should be removed or not
     def get_medicine_CN(self, update, context):
-        medicine_CN = update.message.text
-        user_id = update.message.from_user.id
+        try:
+            medicine_CN = update.message.text
+            user_id = update.message.from_user.id
+        except:
+            user_id = update.callback_query.from_user.id
+            medicine_cn = update.callback_query.data
+
         # connects to DataBase with UserId and get the current reminder for this medicine_CN.
         self.set_function(user_id, "GET REMINDER")
         self.set_query(user_id, ["CN"], [medicine_CN])
@@ -1103,7 +1110,7 @@ class PillDora:
                 SHOW_INFORMATION: [MessageHandler(Filters.regex('^Exit$'), self.getToTheMenu),
                                    MessageHandler(Filters.text | Filters.photo, self.show_infoAbout)],
                 LOCATION: [MessageHandler(Filters.regex('^Exit$'), self.getToTheMenu),
-                            MessageHandler(Filters.location, self.print_location),
+                           MessageHandler(Filters.location, self.print_location),
                            MessageHandler(Filters.regex("^Don't Send Location"), self.manage_response)],
                 CHECK_PRE: [MessageHandler(Filters.regex('^Exit$'), self.getToTheMenu),
                             MessageHandler(Filters.regex('^YES$'), self.manage_response),

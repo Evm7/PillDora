@@ -316,7 +316,8 @@ class DBMethods:
                                                                                                            cn=national_code))
             db.execute('''DELETE FROM aidebot.receipts WHERE user_id={id} and national_code={cn}'''.format(id=user_id,
                                                                                                            cn=national_code))
-            return True
+            return "True"
+        return "False"
 
     def get_times(self, frequency):
         time = []
