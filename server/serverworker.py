@@ -117,7 +117,7 @@ class ServerWorker:
             date_selected = parsed_string["parameters"]["date"]
             calendar_output = self.checker.get_reminders(user_id=user_id, date=date_selected)
             if calendar_output is not None:
-                journey_info = "Reminders:\\n"
+                journey_info = ""
                 for output in calendar_output:
                     time = str(output[1]).split(',')[1] if len(str(output[1]).split(',')) == 2 else str(output[1])
                     journey_info += "\\t-> " + cima.get_med_name(str(output[0])) + " : " + time + "\\n"
@@ -135,7 +135,7 @@ class ServerWorker:
         elif instruction == "CURRENT TREATMENT":
             current_treatment = self.checker.get_currentTreatment(user_id=user_id)
             if current_treatment is not ():
-                current_treatment_info = "Meds currently being taken :\\n"
+                current_treatment_info = ""
                 for output in current_treatment:
                     date_str = str(output[1]).split()[0]
                     if date_str == MAX_DATE:
@@ -153,7 +153,7 @@ class ServerWorker:
         elif instruction == "HISTORY":
             history = self.checker.get_history(user_id=user_id)
             if history is not ():
-                history_info = "History of last meds :\\n"
+                history_info = ""
                 for output in history:
                     history_info += "\\t-> " + cima.get_med_name(str(output[0])) + " of " + str(output[1])
                     if output[2]:
@@ -179,11 +179,11 @@ class ServerWorker:
         elif instruction == "INVENTORY":
             inventory = self.checker.get_inventory(user_id=user_id)
             if inventory is not ():
-                inventory_info = "Your current inventory consists on:"
+                inventory_info = ""
                 for output in inventory:
-                    inventory_info += "\\n\\t-> There are " + str(output[1]) + " of " + cima.get_med_name(
+                    inventory_info += "\\t-> There are " + str(output[1]) + " of " + cima.get_med_name(
                         str(output[0])) + " which expire on " + datetime.datetime.strftime(output[2],
-                                                                                           "%Y-%m-%d")
+                                                                                           "%Y-%m-%d")+"\\n"
             else:
                 inventory_info = "False"
             response = self.bot_parser(user_id=user_id,
