@@ -963,8 +963,11 @@ class PillDora:
 
         if self.get_states(user_id)[1] == JOURNEY:
             self.set_dates(user_id, "arrival", date)
+            message_id = update.callback_query.message.message_id
+            self.bot.delete_message(chat_id=user_id, message_id=message_id)
+            self.bot.delete_message(chat_id=user_id, message_id=message_id-1)
             context.bot.send_message(chat_id=user_id,
-                                     text="And you actually *arrive on " + date_str + "*\nIs this information correct?",
+                                     text="Your journey starts on *"+self.get_dates(user_id)[0]+"* until *"+self.get_dates(user_id)[1]+"*\nIs this information correct?",
                                      reply_markup=yes_no_markup,
                                      parse_mode=telegram.ParseMode.MARKDOWN)
             self.set_query(user_id, ["departure_date", "arrival_date"],
