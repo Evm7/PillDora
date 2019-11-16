@@ -101,8 +101,7 @@ class ServerWorker:
                             parsed_string["parameters"]["arrival_date"]]
             # IF THE BEGINNING DATe AND THE END DATE CONFLICTS, THE METHOD WILL RETURN A NULL CALENDAR OUTPUT
             calendar_output = self.checker.get_reminders(user_id=user_id, date=begin, to_date=end)
-            print(calendar_output)
-            if calendar_output is not None:
+            if bool(calendar_output):
                 journey_info = "Quantity of meds to take:\\n"
                 for output in list(calendar_output.keys()):
                     journey_info += "\\t-> " + cima.get_med_name(str(output)) + " : " + str(
