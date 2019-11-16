@@ -707,6 +707,7 @@ class PillDora:
             update.message.reply_text(
                 "Introduce CN of the Medicine you want information about or choose it from the ones on your Current Treatment:",
                 reply_markup=dyn_markup)
+            self.set_state(user_id=user_id, state=SHOW_INFORMATION)
             return self.set_state(user_id=user_id, state=CHOOSING)
         else:
             update.message.reply_text("Introduce CN of the Medicine you want information about:")
@@ -775,7 +776,7 @@ class PillDora:
         user_id = update.callback_query.from_user.id
         if self.get_states(user_id)[0] == TAKE_PILL:
             self.send_new_pill(update, context)
-        elif self.get_states(user_id)[0] == CHOOSING:
+        elif self.get_states(user_id)[0] == CHOOSING and self.get_states(user_id)[1] == SHOW_INFORMATION:
             self.show_infoAbout(update, context)
         elif self.get_states(user_id)[0] == CHECK_REM:
             self.get_medicine_CN(update, context)
@@ -963,7 +964,7 @@ class PillDora:
         if self.get_states(user_id)[1] == JOURNEY:
             self.set_dates(user_id, "arrival", date)
             context.bot.send_message(chat_id=user_id,
-                                     text="And you actually *arrive on" + date_str + "*\nIs this information correct?",
+                                     text="And you actually *arrive on " + date_str + "*\nIs this information correct?",
                                      reply_markup=yes_no_markup,
                                      parse_mode=telegram.ParseMode.MARKDOWN)
             self.set_query(user_id, ["departure_date", "arrival_date"],

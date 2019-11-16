@@ -294,8 +294,9 @@ class DBMethods:
         return (abs((d2 - d1).days) + 1)
 
     def get_array_dates(self, init_date, end_date):
-        in_date = datetime.datetime.strptime(init_date, '%Y-%m-%d')
-        return [in_date + datetime.timedelta(days=x) for x in range(self.days_between(init_date, end_date))]
+        in_datetime = datetime.datetime.strptime(init_date, '%Y-%m-%d')
+        end_datetime= datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        return [in_datetime + datetime.timedelta(days=x) for x in range(self.days_between(in_datetime, end_datetime))]
 
     def get_calendar(self, user_id, date):
         with Database() as db:

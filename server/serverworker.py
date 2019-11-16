@@ -99,9 +99,10 @@ class ServerWorker:
             # WE OUTPUT A SERIES OF ACTIONS TO BE DONE FROM A LEAVING DATE TO THE DEPARTURE ONE
             [begin, end] = [parsed_string["parameters"]["departure_date"],
                             parsed_string["parameters"]["arrival_date"]]
-            # IF THE BEGINNING DAT AND THE END DATE CONFLICTS, THE METHOD WILL RETURN A NULL CALENDAR OUTPUT
+            # IF THE BEGINNING DATe AND THE END DATE CONFLICTS, THE METHOD WILL RETURN A NULL CALENDAR OUTPUT
             calendar_output = self.checker.get_reminders(user_id=user_id, date=begin, to_date=end)
-            if calendar_output is None:
+            print(calendar_output)
+            if calendar_output is not None:
                 journey_info = "Quantity of meds to take:\\n"
                 for output in list(calendar_output.keys()):
                     journey_info += "\\t-> " + cima.get_med_name(str(output)) + " : " + str(
