@@ -197,8 +197,6 @@ class ServerWorker:
             # THIS MEANS THAT WE GOT INFORMATION ABOUT THIS MEDICINE, SO WE ARE PARSING IT
             if reminder_info != '"False"':
                 date_str = datetime.datetime.strftime(reminder_info[0][2], "%Y-%m-%d")
-                if date_str == MAX_DATE:
-                    date_str = "Chronic"
                 reminder_info = '"CN":"' + str(reminder_info[0][0]) + '","frequency":"' + str(
                     reminder_info[0][1]) + '","end_date":"' + date_str + '"'
             else:
