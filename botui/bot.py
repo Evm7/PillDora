@@ -76,11 +76,15 @@ yes_no_reply_keyboard = [['YES', 'NO']]
 taken_pill_keyboard = [['TAKEN', 'POSTPONE']]
 loc_button = KeyboardButton(text="Send Location", request_location=True)
 location_keyboard = [[loc_button, "Don't Send Location"]]
+start_keyboard=[[InlineKeyboardButton(text="START", callback_data="/start")]]
+day_keyboard=[[u'Fantastic! \U0001F601', u'I have had better days \U0001F641']]
 
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 yes_no_markup = ReplyKeyboardMarkup(yes_no_reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 taken_pill_markup = ReplyKeyboardMarkup(taken_pill_keyboard, one_time_keyboard=True, resize_keyboard=True)
 loc_markup = ReplyKeyboardMarkup(location_keyboard, one_time_keyboard=True, resize_keyboard=True)
+start_markup = InlineKeyboardMarkup(start_keyboard)
+day_markup= ReplyKeyboardMarkup(day_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
 
 class PillDora:
@@ -211,6 +215,7 @@ class PillDora:
         :param context: Handler context
         :return: the new state to be on
         """
+
         user_id = update.message.from_user.id
         name = self.get_name(update.message.from_user)
         self.aide_bot[user_id] = {'states': [LOGIN, LOGIN], 'intr_prescription_counter': 0,
@@ -224,17 +229,24 @@ class PillDora:
                                   'serverworker': ServerWorker(user_id),
                                   'language': 'eng'}
         logger.info('User ' + name + ' has connected to AideBot: ID is ' + str(user_id))
-        context.bot.send_message(chat_id=user_id, text=("Welcome " + name + " ! My name is AideBot"))
+        message = update.message.text
+        if str(message).startswith("/start"):
+            self.bot.send_message(chat_id=user_id, text=("Welcome " + name + " ! My name is AideBot \U0001F64C"))
+        elif str(message).startswith("I have had"):
+            self.bot.send_message(chat_id=user_id, text="No worries, I am with you! Sure you will get better! \U0001F4AA")
+        else:
+            self.bot.send_message(chat_id=user_id, text="That's what I love to hear! Keep like that! \U0001F44D")
 
         if self.user_verification(user_id) == "True":
-            update.message.reply_text("Enter your password in order to get Assistance:")
+            self.bot.send_message(chat_id=user_id, text="Enter your password in order to get Assistance: \U0001F5DD")
             return self.set_state(user_id, LOGIN)
         else:
-            context.bot.send_message(chat_id=update.message.chat_id,
-                                     text="Welcome to the HealthCare Assistant AideBot!")
-            context.bot.send_message(chat_id=update.message.chat_id,
-                                     text="Enter new password for creating your account.")
+            self.bot.send_message(chat_id=update.message.chat_id,
+                                  text="Welcome to the HealthCare Assistant AideBot! \U0001F64C")
+            self.bot.send_message(chat_id=update.message.chat_id,
+                                  text="Enter new password for creating your account.\U0001F510")
         return self.set_state(user_id, NEW_USER)
+
 
     @staticmethod
     def get_name(user):
@@ -291,7 +303,7 @@ class PillDora:
         if self.pwd_verification(password, user_id) == "False":
             update.message.reply_text("Wrong Password. Enter correct password again:")
             return self.set_state(user_id, LOGIN)
-        update.message.reply_text('How can I help you?',
+        update.message.reply_text('How can I help you? \U0001F914',
                                   reply_markup=markup)
         return self.set_state(user_id, CHOOSING)
 
@@ -331,7 +343,7 @@ class PillDora:
             self.set_query(user_id, ["new_password"], [password])
             query = self.create_query(user_id)
             self.send_query(user_id, query)
-            update.message.reply_text('Alright. Now you are ready! How can I help you?',
+            update.message.reply_text('Alright. Now you are ready! How can I help you? \U0001F914',
                                       reply_markup=markup)
             return self.set_state(update.message.from_user.id, CHOOSING)
 
@@ -410,7 +422,7 @@ class PillDora:
         self.set_query(user_id, ["None"], ["None"])
         self.set_function(user_id, "None")
         logger.info('User ' + self.get_name(update.message.from_user) + ' in the menu')
-        update.message.reply_text("Is there any other way I can help you?", reply_markup=markup)
+        update.message.reply_text("Is there any other way I can help you? \U0001F914", reply_markup=markup)
         return self.set_state(update.message.from_user.id, CHOOSING)
 
     @run_async
@@ -726,14 +738,14 @@ class PillDora:
                 return self.set_state(user_id=update.message.from_user.id, state=SHOW_INFORMATION)
             else:
                 update.message.reply_text(cima.get_info_about(medicine_cn))
-                update.message.reply_text(chat_id=user_id, text="Is there any other way I can help you?",
+                update.message.reply_text(chat_id=user_id, text="Is there any other way I can help you? \U0001F914",
                                           reply_markup=markup)
                 return self.set_state(user_id=update.message.from_user.id, state=CHOOSING)
         except:
             user_id = update.callback_query.from_user.id
             medicine_cn = update.callback_query.data
             self.bot.send_message(text=cima.get_info_about(medicine_cn), chat_id=user_id)
-            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you?",
+            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you? \U0001F914",
                                   reply_markup=markup)
             return self.set_state(user_id=user_id, state=CHOOSING)
 
@@ -760,7 +772,7 @@ class PillDora:
             self.event.set()
             return self.set_state(user_id, END)
         else:
-            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you?", reply_markup=markup)
+            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you? \U0001F914", reply_markup=markup)
             return self.set_state(user_id, CHOOSING)
 
     @run_async
@@ -779,6 +791,10 @@ class PillDora:
             self.show_infoAbout(update, context)
         elif self.get_states(user_id)[0] == CHECK_REM:
             self.get_medicine_CN(update, context)
+        elif self.get_states(user_id)[0] == END or self.get_states(user_id)[0] == REMINDERS:
+            name=update.callback_query.from_user.first_name
+            self.bot.send_message(chat_id=user_id, text="Welcome " + name + "! How is your day going? \U0001F603",
+                                  reply_markup=day_markup)
         else:
             selected, date = telegramcalendar.process_calendar_selection(context.bot, update)
             if date is not None:
@@ -787,9 +803,11 @@ class PillDora:
                     date_str = "CHRONIC"
             if selected:
                 if self.get_states(user_id)[0] == CHOOSING:
+                    '''
                     context.bot.send_message(chat_id=user_id,
                                              text="You selected %s" % date_str,
                                              reply_markup=ReplyKeyboardRemove())
+                                             '''
                 if self.get_states(user_id)[0] == CHOOSING:
                     self.get_calendar_tasks(update, context, date.strftime("%Y-%m-%d"), user_id)
                     self.set_state(user_id, CHOOSING)
@@ -827,7 +845,7 @@ class PillDora:
         self.bot.delete_message(chat_id=user_id, message_id=message_id)
         self.bot.send_message(chat_id=user_id,
                                  text="Reminders for " + date_str + " :\n"+response['parameters']['tasks'])
-        self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you?",
+        self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you? \U0001F914",
                                  reply_markup=markup)
 
     @run_async
@@ -915,7 +933,7 @@ class PillDora:
         reminder_info = response['parameters']
         if reminder_info['CN'] == "False":
             self.bot.send_message(chat_id=user_id, text='CN introduced is wrong, there is not any med with this CN')
-            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you?", reply_markup=markup)
+            self.bot.send_message(chat_id=user_id, text="Is there any other way I can help you? \U0001F914", reply_markup=markup)
             return self.set_state(user_id, CHOOSING)
         end_date = response['parameters']['end_date']
         if end_date == MAX_DATE:
@@ -1035,7 +1053,8 @@ class PillDora:
 
     # Ends the communication between the user and the bot
     def exit(self, update, context):
-        update.message.reply_text("See you next time")
+        user_id=update.message.from_user.id
+        self.bot.send_message(chat_id=user_id, text="See you next time \U0001F44B", reply_markup=start_markup)
         logger.info('User ' + self.get_name(update.message.from_user) + ' finish with AideBot')
         self.event.set()
         return self.set_state(update.message.chat_id, END)
@@ -1052,7 +1071,7 @@ class PillDora:
         self.set_dates(user_id=user_id, text="arrival", date="None")
         self.set_counter(user_id=user_id, num=0)
         logger.info('User ' + self.get_name(update.message.from_user) + ' in the menu after quitting from function')
-        update.message.reply_text("Is there any other way I can help you?", reply_markup=markup)
+        update.message.reply_text("Is there any other way I can help you? \U0001F914", reply_markup=markup)
         return self.set_state(user_id=user_id, state=CHOOSING)
 
     # Main of the Client.py, where the bot is activated and creates the transition to the different functionalities
@@ -1122,7 +1141,8 @@ class PillDora:
                           MessageHandler(Filters.regex('^YES$'), self.manage_response),
                           MessageHandler(Filters.regex('^NO$'), self.create_journey)],
                 END: [MessageHandler(Filters.regex('^TAKEN'), self.intr_history_yes),
-                      MessageHandler(Filters.regex('^POSTPONE'), self.intr_history_no)
+                      MessageHandler(Filters.regex('^POSTPONE'), self.intr_history_no),
+                      MessageHandler(Filters.text, self.start)
                       ]
             },
             fallbacks=[MessageHandler(Filters.regex('^Exit$'), self.exit)]
