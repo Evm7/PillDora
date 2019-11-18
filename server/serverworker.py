@@ -208,7 +208,7 @@ class ServerWorker:
         elif instruction == "GET LIST":
             data = self.checker.getCNList(user_id)
             if data is ():
-                info="False"
+                info='"Boolean":"False"}'
             else:
                 references={}
                 for item in data:
