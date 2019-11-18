@@ -620,7 +620,6 @@ class PillDora:
         logger.info('User introducing new pill taken')
         user_id = update.message.from_user.id
         dict = self.list_of_current_cn(user_id)
-        print(dict)
         if dict['Boolean'] != "False":
             dyn_markup = self.makeKeyboard(dict, user_id)
             update.message.reply_text(INTR_PILL_MSSGS[self.get_counter(update.message.from_user.id)],
@@ -714,7 +713,7 @@ class PillDora:
         except:
             user_id = update.callback_query.from_user.id
         dict = self.list_of_current_cn(user_id)
-        if dict is not "False":
+        if dict['Boolean'] != "False":
             dyn_markup = self.makeKeyboard(dict, user_id)
             update.message.reply_text(
                 "Introduce CN of the Medicine you want information about or choose it from the ones on your Current Treatment:",
