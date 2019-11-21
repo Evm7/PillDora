@@ -1,5 +1,5 @@
 import datetime
-
+from passlib.hash import pbkdf2_sha256 as encr
 import pymysql
 
 
@@ -65,9 +65,13 @@ class DBMethods:
 
     def add_user(self, new_user, new_password):
         with Database() as db:
+
+            hash_pwd = encr.hash(new_password)
+            print(new_password)
+            print(hash_pwd)
             db.execute(
                 "INSERT INTO aidebot.users (id, password) VALUES ({id},'{pwd}')".format(id=new_user,
-                                                                                        pwd=new_password))
+                                                                                        pwd=hash_pwd))
             data = db.query("SELECT id FROM aidebot.users where id={id}".format(id=new_user))
 
             if not data:
@@ -79,10 +83,9 @@ class DBMethods:
 
         with Database() as db:
             data = db.query("SELECT password FROM aidebot.users where id={id}".format(id=user_id))
-            if password != data[0][0]:
-                return False
-            else:
-                return True
+            print(data)
+            print(password)
+            return encr.verify(password, data[0][0])
 
     def introd_receipt(self, query_parsed, user_id, date):
         with Database() as db:
