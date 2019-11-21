@@ -65,10 +65,7 @@ class DBMethods:
 
     def add_user(self, new_user, new_password):
         with Database() as db:
-
             hash_pwd = encr.hash(new_password)
-            print(new_password)
-            print(hash_pwd)
             db.execute(
                 "INSERT INTO aidebot.users (id, password) VALUES ({id},'{pwd}')".format(id=new_user,
                                                                                         pwd=hash_pwd))
@@ -83,8 +80,6 @@ class DBMethods:
 
         with Database() as db:
             data = db.query("SELECT password FROM aidebot.users where id={id}".format(id=user_id))
-            print(data)
-            print(password)
             return encr.verify(password, data[0][0])
 
     def introd_receipt(self, query_parsed, user_id, date):
