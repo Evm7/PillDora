@@ -363,7 +363,6 @@ class DBMethods:
                     '''SELECT num_of_pills FROM aidebot.inventory WHERE user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
                         cn=cn, id=user_id, exp_date=exp_date))
                 if data[0][0] == 0:
-                    print("eliminado")
                     db.execute(
                         '''DELETE FROM aidebot.inventory WHERE user_id={id} and national_code={cn} and expiracy_date='{exp_date}' '''.format(
                             cn=cn, id=user_id, exp_date=exp_date))
