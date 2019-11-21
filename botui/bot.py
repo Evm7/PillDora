@@ -227,7 +227,7 @@ class PillDora:
                                   'query': {},
                                   'reminder': {'cn': "None", 'time': 'None'},
                                   'serverworker': ServerWorker(user_id),
-                                  'language': 'eng'}
+                                  'language': update.message.from_user.language_code}
         logger.info('User ' + name + ' has connected to AideBot: ID is ' + str(user_id))
         message = update.message.text
         if str(message).startswith("/start"):
@@ -620,7 +620,7 @@ class PillDora:
         logger.info('User introducing new pill taken')
         user_id = update.message.from_user.id
         dict = self.list_of_current_cn(user_id)
-        if dict['Boolean'] != "False":
+        if 'Boolean' not in dict:
             dyn_markup = self.makeKeyboard(dict, user_id)
             update.message.reply_text(INTR_PILL_MSSGS[self.get_counter(update.message.from_user.id)],
                                       reply_markup=dyn_markup)
@@ -713,7 +713,7 @@ class PillDora:
         except:
             user_id = update.callback_query.from_user.id
         dict = self.list_of_current_cn(user_id)
-        if dict['Boolean'] != "False":
+        if 'Boolean' not in dict:
             dyn_markup = self.makeKeyboard(dict, user_id)
             update.message.reply_text(
                 "Introduce CN of the Medicine you want information about or choose it from the ones on your Current Treatment:",
@@ -738,7 +738,7 @@ class PillDora:
                 return self.set_state(user_id=update.message.from_user.id, state=SHOW_INFORMATION)
             else:
                 update.message.reply_text(cima.get_info_about(medicine_cn))
-                update.message.reply_text(chat_id=user_id, text="Is there any other way I can help you? \U0001F914",
+                update.message.reply_text(text="Is there any other way I can help you? \U0001F914",
                                           reply_markup=markup)
                 return self.set_state(user_id=update.message.from_user.id, state=CHOOSING)
         except:
@@ -907,14 +907,15 @@ class PillDora:
         logger.info('User ' + self.get_name(update.message.from_user) + ' deleting reminder')
         user_id = update.message.from_user.id
         dict = self.list_of_current_cn(user_id)
-        if dict is not "False":
+        if 'Boolean' not in dict:
             dyn_markup = self.makeKeyboard(dict, user_id)
             update.message.reply_text('Choose medicine you want to delete from your current treatment:',
                                       reply_markup=dyn_markup)
             return self.set_state(user_id, CHECK_REM)
         else:
-            update.message.reply_text('Please Introduce CN of the Medicine you want to delete the reminder:')
-            return self.set_state(user_id, GET_CN)
+            update.message.reply_text('There is any pill in the current treatment, so any reminder can be delete.')
+            update.message.reply_text(text="Is there any other way I can help you? \U0001F914", reply_markup=markup)
+            return self.set_state(user_id, CHOOSING)
 
     # Method that asks for a CN and prints all the information and asks about if it should be removed or not
     def get_medicine_CN(self, update, context):

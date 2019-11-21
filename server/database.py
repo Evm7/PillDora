@@ -295,7 +295,7 @@ class DBMethods:
 
     def get_array_dates(self, init_date, end_date):
         in_datetime = datetime.datetime.strptime(init_date, '%Y-%m-%d')
-        end_datetime= datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        end_datetime = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         return [in_datetime + datetime.timedelta(days=x) for x in range(self.days_between(in_datetime, end_datetime))]
 
     def get_calendar(self, user_id, date):
@@ -309,9 +309,6 @@ class DBMethods:
     def delete_reminders(self, user_id, national_code):
         with Database() as db:
             # Deleting reminders should delete the entrance of each remind in daily_reminders and receipt, but not from inventory as has all that we have taken always.
-
-            # db.execute('''DELETE FROM aidebot.inventory WHERE user_id={id} and national_code={cn}
-            # '''.format(id=user_id, cn=national_code))
             db.execute(
                 '''DELETE FROM aidebot.daily_reminders WHERE user_id={id} and national_code={cn}'''.format(id=user_id,
                                                                                                            cn=national_code))
@@ -356,7 +353,7 @@ class DBMethods:
             # there is the possibility of more than one columns of one CN
             data = db.query('''SELECT MIN(expiracy_date)
                             FROM aidebot.inventory 
-                            WHERE national_code >= '{cn}' and user_id={id}
+                            WHERE national_code = '{cn}' and user_id={id}
                             '''.format(cn=cn, id=user_id))
             if data[0][0] is not None:
                 exp_date = datetime.datetime.strftime(data[0][0], "%Y-%m-%d %H:%M:%S")
@@ -364,19 +361,27 @@ class DBMethods:
                 db.execute(
                     '''UPDATE aidebot.inventory SET num_of_pills=num_of_pills-{quantity} where user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
                         cn=cn, id=user_id, exp_date=exp_date, quantity=quantity))
+                data = db.query(
+                    '''SELECT num_of_pills FROM aidebot.inventory WHERE user_id={id} and expiracy_date='{exp_date}' and national_code ={cn}'''.format(
+                        cn=cn, id=user_id, exp_date=exp_date))
+                if data[0][0] == 0:
+                    print("eliminado")
+                    db.execute(
+                        '''DELETE FROM aidebot.inventory WHERE user_id={id} and national_code={cn} and expiracy_date='{exp_date}' '''.format(
+                            cn=cn, id=user_id, exp_date=exp_date))
 
                 # check if there is enough pills in inventory for the following three days:
                 today = datetime.datetime.now()
                 data = db.query('''SELECT end_date
                                 FROM aidebot.receipts 
-                                WHERE national_code >= '{cn}' and user_id={id}
+                                WHERE national_code = '{cn}' and user_id={id}
                                 '''.format(cn=cn, id=user_id))
                 if data is not ():
                     end_date = data[0][0]
                     pills_needed = min(self.days_between(today, end_date), 3) * int(quantity)
                     data = db.query('''SELECT SUM(num_of_pills)
                                                 FROM aidebot.inventory 
-                                                WHERE national_code >= '{cn}' and user_id={id}
+                                                WHERE national_code = '{cn}' and user_id={id}
                                                 '''.format(cn=cn, id=user_id))
                     if data is not ():
                         pills_in = int(data[0][0])
