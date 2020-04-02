@@ -1,0 +1,8 @@
+apscheduler
+datetime
+luigi
+pycparser
+pymysql
+requests
+schedule
+passlib
